@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>司机信息交换</title>
+
+    <link href="/static/src/base/css/bootstrap-switch.css" rel="stylesheet">
+    <style type="text/css">
+        .displayNone {
+            display: none;
+        }
+
+        input[type=text] {
+            width: 180px;
+            display: inline-block;
+        }
+
+        a#btnUpload {
+            display: inline-block;
+            text-align: center;
+            background-color: #5cb85c;
+            width: 200px;
+            border: none;
+            height: 36px;
+            line-height: 36px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        form > div {
+            height: 70px;
+            line-height: 70px;
+        }
+
+        form > div > span {
+            width: 100px;
+            display: inline-block;
+            text-align: right;
+            margin-right: 20px;
+        }
+
+        button#btnSubmit {
+            width: 120px;
+            /*background-color: #ff8903;*/
+            /*color: #fff;*/
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: normal;
+            margin: 0 10px;
+            color: #999;
+        }
+
+        #sp-result {
+            display: inline;
+            position: relative;
+            top: 2px;
+            color: #008000;
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <form action="doAction" method="post" enctype="multipart/form-data">
+        <div>
+            <span>操作模式：</span>
+            <input id="switch-single-multi" checked="checked" name="switch-single-multi" type="checkbox"
+                   data-handle-width="60" data-on-text="单个司机" data-off-text="多个司机" data-on-color="success"
+                   data-off-color="warning">
+            <label>显示的文字为选择项</label>
+        </div>
+        <div>
+            <span>司机标志：</span>
+            <input id="switch-phone-id" checked="checked" name="switch-phone-id" type="checkbox" data-handle-width="60"
+                   data-on-text="司机ID" data-off-text="司机手机" data-on-color="success" data-off-color="warning">
+            <label>显示的文字为选择项</label>
+        </div>
+        <div id="dv-text">
+            <span>司机ID/Phone：</span>
+            <input type="text" class="form-control" id="txt-verified" name="txt-verified" placeholder="已审核司机ID或Phone"/>
+            &nbsp;
+            <input type="text" class="form-control" id="txt-deleted" name="txt-deleted" placeholder="已删除司机ID或Phone"/>
+        </div>
+        <div id="dv-files" class="displayNone">
+            <span>选择文件：</span>
+            <input id="file-drivers" type="file" name="file-drivers" size="20" style="display:none">
+            <input id="upload-file" type="hidden" name="upload-file">
+            <a id="btnUpload">上 传</a>
+            <label>格式为txt或csv，第一列已审核过的司机标志，第二列已删除的司机标志</label>
+        </div>
+        <div>
+            <span></span>
+            <button type="button" id='btnSubmit' class="btn btn-default navbar-btn">提 交</button>
+            <span id="sp-result"></span>
+            <label id="sp-result-details"></label>
+        </div>
+
+    </form>
+</div>
+<?php $this->beginClip('javascript');?>
+
+<script src="/static/src/base/js/bootstrap-switch.js"></script>
+<script src="/static/src/base/js/ajaxfileupload.js"></script>
+<script type="text/javascript">
+    $(function () {
+
+        // 定义变量
+        var dvText = $("#dv-text");
+        var dvFiles = $("#dv-files");
+        var txtVerified = $("#txt-verified");
+        var txtDeleted = $("#txt-deleted");
+
+        // init
+        $("input[type='checkbox']").bootstrapSwitch();
+
+        // 监听switch event
+        $("input[type='checkbox']").on('switchChange.bootstrapSwitch', function (event, state) {
+            if (this.id === "switch-single-multi") {
+                state ? dvText.show() && dvFiles.hide() : dvFiles.show() && dvText.hide();
+            }
+        });
+
+        // 上传文件
+        $("#btnUpload").on("click", function () {
+            $("#file-drivers").click();
+        });
+
+
+        // 监听文件change事件
+        $("#file-drivers").on("change", function () {
+            $.ajaxFileUpload({
+                url: 'do_upload',
+                secureuri: false,
+                data: null,
+                fileElementId: 'file-drivers',
+                dataType: 'json',
+                success: function (d, msg) {
+                    $("#file-drivers").val('');
+                    if (d.errno !== 0) {
+                        return console.log(msg);
+                    }
+                    $("#upload-file").val(d.data && d.data.full_path);
+                },
+                error: function (data, status, e) {
+                    console.log(e)
+                }
+            });
+        });
+
+        // 提交表单
+        $("#btnSubmit").on("click", function (e) {
+            var data = $("form").serialize();
+
+            $.post("doAction", data, function (d) {
+                console.log(d);
+                d = JSON.parse(d);
+                if (d.errno != 0) {
+                    $("#sp-result").css('color', "red");
+                }
+                $("#sp-result").text(d.errmsg);
+                $("#sp-result-details").text(JSON.stringify(d.data));
+                return;
+            }, "text");
+
+        });
+
+    });
+</script>
+<?php $this->endClip();?>
+</body>
+
+</html>

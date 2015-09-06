@@ -1,0 +1,23 @@
+{
+    "name": "static-qkn",
+    "version": "1.0.0",
+    "description": "build static",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "liujiangbei@diditaxi.com.cn",
+    "license": "ISC",
+    "devDependencies": {
+        "gulp": "^3.9.0",
+        "fs-extra": "^0.22.1",
+        "gulp-compressor": "^0.1.0",
+        "gulp-concat": "^2.6.0",
+        "gulp-frep": "^0.1.3",
+        "gulp-hash-src": "^0.1.3",
+        "gulp-html-replace": "^1.5.1",
+        "gulp-imagemin": "^2.3.0",
+        "gulp-minify-css": "^1.2.0",
+        "gulp-uglify": "^1.2.0"
+    }
+}

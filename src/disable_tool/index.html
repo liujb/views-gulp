@@ -1,0 +1,198 @@
+<div class="modal-body">
+    <div class="panel panel-default border-none">
+        <form class="form-horizontal mt15 wid700" id="createForm" action="/kefu/sms/edit" target="rfFrame" enctype="multipart/form-data" method="post">
+            <input type="hidden" name="id" id="edit_id">
+            <div class="form-group displayNone">
+                <label class="control-label col-md-2 text-right">手机号添加方式:</label>
+                <div class="col-md-5">
+                    <input type="radio" name="add_type" value="0" class="mr10" checked="checked">手动输入
+                    <input type="radio" name="add_type" value="1" class="mr10">文件上传
+                </div>
+            </div>
+
+            <div class="form-group" id="region_input">
+                <label class="control-label col-md-2 text-right">输入手机号:</label>
+                <div class="col-md-8">
+                    <textarea class="form-control msSendObjects" rows="10" placeholder="请输入手机号，多个手机号码以英文逗号分割" id="txt_phones"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group" id="region_upload" style="display:none">
+                <label class="control-label col-md-2 text-right">上传手机号文件:</label>
+                <div class="col-md-8">
+                    <input type="file" id="upload_file" />
+                    <input type="hidden" name="phone_file" id="phone_file" value=""/>
+                    <div class="upload-img-box" id="upload-img-box">
+                        <div class="upload-pre-file"><span class="upload_icon_all"></span><span id="file_name"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group displayNone">
+                <label class="control-label col-md-2 text-right">操作对象类型:</label>
+                <div class="col-md-5">
+                    <input type="radio" name="op_Object_type" value="phone" class="mr10">手机号
+                    <input type="radio" name="op_Object_type" value="id" class="mr10">id
+                </div>
+            </div>
+            <div class="form-group displayNone">
+                <label class="control-label col-md-2 text-right">操作类型:</label>
+                <div class="col-md-5">
+                    <input type="radio" name="op_type" value="lock" class="mr10">封禁
+                    <input type="radio" name="op_type" value="unlock" class="mr10">解禁
+                </div>
+            </div>
+            <div class="form-group displayNone">
+                <label class="control-label col-md-2 text-right">禁用对象类别:</label>
+                <div class="col-md-5">
+                    <input type="radio" name="type" value="passenger">乘客
+                    <input type="radio" name="type" value="driver">司机
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 text-right">禁用天数:</label>
+                <div class="col-md-5">
+                    <input class="form-control wid200" type="text" id="days" placeholder="99999为永久封禁">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-2 text-right">禁用备注:</label>
+                <div class="col-md-8">
+                    <textarea class="form-control msSendObjects" id="mark"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group displayNone">
+                <label class="control-label col-md-2 text-right">是否发短信:</label>
+                <div class="col-md-5">
+                    <input type="radio" name="sms" value="0" class="mr10" checked="checked">否
+                    <input type="radio" name="sms" value="1" class="mr10">是
+                </div>
+            </div>
+
+            <div class="form-group" id="area-sms-content" style="display:none">
+                <label class="control-label col-md-2 text-right">短信内容:</label>
+                <div class="col-md-8">
+                    <textarea class="form-control msSendObjects" id="sms_content"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group text-center" id="createSureRegion">
+                <!--<button type="button" class="btn-ok btn-warning" id="sureCreate">确定</button>-->
+                <button type="button" class="btn-ok btn-warning" id="sureCreate">提交</button>
+            </div>
+            <div class="form-group" style="display: none;" id="resultRegion">
+                <label class="control-label col-md-2 text-right">执行结果:</label>
+                <div class="col-md-8" id="result">
+                </div>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript" src="/static/src/base/bower/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/src/fist/js/uploadify/jquery.uploadify.min.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        $(':radio[name="add_type"]:first,:radio[name="sms"]:first').prop('checked', true);
+        $(':radio[name="add_type"]').on('click', function(){
+            if(parseInt($(this).val())){
+                $('#region_upload').show();
+                $('#region_input').hide();
+            }else{
+                $('#region_input').show();
+                $('#region_upload').hide();
+            }
+        });
+        $(':radio[name="sms"]').on('click', function(){
+            parseInt($(this).val()) ? $('#area-sms-content').show() : $('#area-sms-content').hide();
+        });
+
+        function submit() {
+            var add_type = $(':radio[name="add_type"]:checked').val();
+            var phones = $.trim($('#txt_phones').val());
+            var phone_file = $('#phone_file').val();
+            var type = $('input[type="radio"][name="type"]:checked').attr('value');
+            var op_type = $('input[type="radio"][name="op_type"]:checked').attr('value');
+            var op_Object_type = $('input[type="radio"][name="op_Object_type"]:checked').attr('value');
+            var days = $('#days').val();
+            var mark = $('#mark').val();
+            var sms = $(':radio[name="sms"]:checked').val(),
+                sms_content = $.trim($('#sms_content').val());
+            $('#resultRegion').css('display', 'none');
+            $('#sureCreate').attr('disabled', true);
+            $.ajax({
+                url: '/fist/disable_tool/submit/index',
+                type: 'post',
+                data: {
+                    add_type : add_type,
+                    phones: phones,
+                    phone_file : phone_file,
+                    type: type,
+                    op_type: op_type,
+                    days: days,
+                    remark: mark,
+                    text_type: op_Object_type,
+                    sms : sms,
+                    sms_content : sms_content
+                },
+                success: function(data) {
+                    $('#sureCreate').removeAttr('disabled');
+                    if (data.errno == 1) {
+                        alert(data.errmsg);
+                    } else if (data.errno == 100) {
+                        alert('请验证手机号是否正确，验证结果如下');
+                        $('#resultRegion').css('display', 'block');
+                        var str = '';
+                        str = '可以操作的： ' + data.errmsg.can.join(',') + '<br/>';
+                        str = str + '手机号不存在的： ' + data.errmsg.no.join(',') + '<br/>';
+                        str = str + '手机号对应多个账号的请单独封禁： ' + data.errmsg.conflict.join(',') + '<br/>';
+                        $('#result').html(str);
+                    } else if (data.errno == 0) {
+                        alert('执行成功');
+                        $('#resultRegion').css('display', 'none');
+                        $('#result').html(data.errmsg);
+                    } else if(data.errno == -1) {
+                        alert(data.errmsg);
+                    } else {
+                        alert('执行失败');
+                    }
+                },
+                error: function() {
+                    $('#sureCreate').removeAttr('disabled');
+                    alert('执行异常');
+                }
+            })
+        };
+
+        $('#sureCreate').click(submit);
+    });
+
+    /* upload file */
+    $("#upload_file").uploadify({
+        "height"          : 30,
+        "width"           : 120,
+        "swf"             : "/static/src/fist/js/uploadify/uploadify.swf",
+        "fileObjName"     : "phone_file",
+        "buttonText"      : "上传附件",
+        "uploader"        : "/fist/disable_tool/submit/upload_phone_file",
+        'removeTimeout'	  : 1,
+        'fileTypeExts'	  : '*.csv; *.txt;',
+        "onFallback"      : function() {
+            alert('Flash error');
+        },
+        "onUploadSuccess" : function(file, res){
+            var res = $.parseJSON(res);
+            if(res.errno == 0){
+                $("#phone_file").val(res.data.full_path);
+                $("#upload-img-box").show().find('#file_name').text(res.data.file_name + ' ' + res.data.file_size);
+            } else {
+                $("#upload-img-box").show().find('#file_name').text(res.errmsg);
+            }
+        }
+    });
+
+    </script>
+    <link href="/static/src/kefu/css/kefu-base.css" rel="stylesheet" type="text/css" />
+    <link href="/static/src/kefu/css/kefu-common.css" rel="stylesheet" type="text/css" />
+    <link href="/static/src/fist/css/uploadify.css" rel="stylesheet" type="text/css" />
+</div>
